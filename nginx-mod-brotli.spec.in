@@ -1,0 +1,64 @@
+Summary: Directives "echo", "sleep", "time" and more
+Name: nginx-mod-brotli
+Version: 1.0.0rc
+Release: 1%{?dist}
+Vendor: Artera
+URL: https://github.com/google/ngx_brotli
+
+%define _modname            ngx_brotli
+%define _nginxver           @NGINXVER@
+%define nginx_config_dir    %{_sysconfdir}/nginx
+%define nginx_build_dir     %{_builddir}/nginx-%{_nginxver}
+
+Source0: https://nginx.org/download/nginx-%{_nginxver}.tar.gz
+Source1: https://github.com/google/%{_modname}/archive/v%{version}/%{_modname}-%{version}.tar.gz
+
+Requires: nginx = 1:%{_nginxver}
+Requires: brotli
+BuildRequires: nginx
+BuildRequires: libtool
+BuildRequires: autoconf
+BuildRequires: automake
+BuildRequires: openssl-devel
+BuildRequires: pcre-devel
+BuildRequires: zlib-devel
+BuildRequires: perl-devel
+BuildRequires: gd-devel
+BuildRequires: GeoIP-devel
+BuildRequires: libxslt-devel
+BuildRequires: perl-devel
+BuildRequires: perl(ExtUtils::Embed)
+BuildRequires: gperftools-devel
+BuildRequires: brotli-devel
+
+License: CUSTOM
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+
+%description
+Brotli compression filter module for nginx.
+
+%prep
+%setup -q -n nginx-%{_nginxver}
+%setup -T -D -b 1 -n %{_modname}-%{version}
+sed 's@/usr/local@/usr@' -i %{_builddir}/%{_modname}-%{version}/config
+
+%build
+cd %{_builddir}/nginx-%{_nginxver}
+./configure --with-file-aio --with-ipv6 --with-stream %(nginx -V 2>&1 | grep -Po -- '--with-http[^ ]+' | xargs echo) --with-cc-opt='%{optflags}' --add-dynamic-module=../%{_modname}-%{version}
+make modules
+
+%install
+%{__rm} -rf %{buildroot}
+
+%{__install} -Dm755 %{nginx_build_dir}/objs/ngx_http_brotli_filter_module.so \
+    $RPM_BUILD_ROOT%{_libdir}/nginx/modules/ngx_http_brotli_filter_module.so
+%{__install} -Dm755 %{nginx_build_dir}/objs/ngx_http_brotli_static_module.so \
+    $RPM_BUILD_ROOT%{_libdir}/nginx/modules/ngx_http_brotli_static_module.so
+
+%clean
+%{__rm} -rf %{buildroot}
+
+%files
+%defattr(-,root,root)
+%{_libdir}/nginx/modules/*.so

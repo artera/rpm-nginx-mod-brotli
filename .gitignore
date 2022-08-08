@@ -1,0 +1,8 @@
+*.gz
+*.bz2
+*.zip
+*.tar
+*.bak
+*.spec
+*~
+/target
