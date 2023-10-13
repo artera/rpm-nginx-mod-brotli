@@ -44,7 +44,7 @@ sed 's@/usr/local@/usr@' -i %{_builddir}/%{_modname}-%{version}/config
 
 %build
 cd %{_builddir}/nginx-%{_nginxver}
-./configure --with-file-aio --with-ipv6 --with-stream %(nginx -V 2>&1 | grep -Po -- '--with-http[^ ]+' | xargs echo) --with-cc-opt='%{optflags}' --add-dynamic-module=../%{_modname}-%{version}
+./configure --with-compat --add-dynamic-module=../%{_modname}-%{version}
 make modules
 
 %install
